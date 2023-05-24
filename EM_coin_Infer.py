@@ -34,13 +34,16 @@ while diff > 0.001 :
  
 
 #정확도 계산
-df['coin_infer'] = df.iloc[:, 5:5+len(e_head_probs)].idxmax(axis=1).apply(lambda x : x.split('_')[-1])
-df['coin_infer_prob'] = df.iloc[:, 5:5+len(e_head_probs)].idxmax(axis=1).apply(lambda x : f"{e_head_probs[int(x.split('_')[-1])]:.2f}")
+label_probs = np.array([float(d) for d in data[0]])
+df['coin_infer_prob'] = df.iloc[:, 5:5+len(e_head_probs)].idxmax(axis=1).apply(lambda x : e_head_probs[int(x.split('_')[-1])])
+df['coin_infer'] = df['coin_infer_prob'].apply(lambda x : str(np.abs(label_probs-x).argmin()))
 df['correct'] = (df['coin_infer']==df['label']).apply(lambda x : 'S' if x else 'F')
 acc = df['correct'][df['correct']=='S'].count() / df['correct'].count()
 
 print('코인별 확률 : ', e_head_probs)
 print('정확도 : ', acc)
+
+
 
 #결과 저장
 save_data = data.copy()
@@ -53,7 +56,4 @@ with open('data_result.txt', 'w') as f :
     for d in save_data :
         f.write(' '.join(d) + '\n')
 
-df_prob = df[['sequence', 'label_prob', 'coin_infer_prob']]
-df_prob['correct'] = df_prob.apply(lambda x : 'S' if abs(float(x['label_prob']) - float(x['coin_infer_prob'])) <= 0.1 else 'F', axis=1)
-df_prob.to_csv('data_result_prob.csv', index=False)
 print('결과 저장 완료')
